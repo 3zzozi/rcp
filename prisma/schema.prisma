@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model (base for Teacher and Student)
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  university    String
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  teacherProfile Teacher?
+  studentProfile Student?
+}
+
+// Teacher profile
+model Teacher {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  bio           String?
+  subscriptionPlan SubscriptionPlan @default(FREE)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  curriculums   Curriculum[]
+}
+
+// Student profile
+model Student {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  program       String?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments   Enrollment[]
+  homeworkSubmissions HomeworkSubmission[]
+  readLectures  ReadLecture[]
+}
+
+// Curriculum model
+model Curriculum {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  uniqueCode    String    @unique
+  teacherId     String
+  teacher       Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  lectures      Lecture[]
+  notes         Note[]
+  enrollments   Enrollment[]
+}
+
+// Lecture model
+model Lecture {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    @db.Text
+  weekNumber    Int
+  curriculumId  String
+  curriculum    Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  homeworks     Homework[]
+  attachments   Attachment[]
+  readLectures  ReadLecture[]
+}
+
+// Note model (for notifications)
+model Note {
+  id            String    @id @default(cuid())
+  content       String
+  expiryDate    DateTime?
+  curriculumId  String
+  curriculum    Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+}
+
+// Homework model
+model Homework {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?   @db.Text
+  dueDate       DateTime?
+  type          HomeworkType
+  lectureId     String
+  lecture       Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  mcqQuestions  MCQQuestion[]
+  submissions   HomeworkSubmission[]
+}
+
+// MCQ Question model
+model MCQQuestion {
+  id            String    @id @default(cuid())
+  question      String
+  options       String    @db.Text // JSON string of options
+  correctOption Int
+  homeworkId    String
+  homework      Homework  @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+}
+
+// Homework Submission model
+model HomeworkSubmission {
+  id            String    @id @default(cuid())
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  homeworkId    String
+  homework      Homework  @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  content       String?   @db.Text // For text submissions
+  fileUrl       String?   // For file uploads
+  mcqAnswers    String?   @db.Text // JSON string of answers
+  grade         Float?
+  submittedAt   DateTime  @default(now())
+  
+  @@unique([studentId, homeworkId])
+}
+
+// Attachment model
+model Attachment {
+  id            String    @id @default(cuid())
+  title         String
+  fileUrl       String
+  lectureId     String
+  lecture       Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+}
+
+// Enrollment model
+model Enrollment {
+  id            String    @id @default(cuid())
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  curriculumId  String
+  curriculum    Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  enrolledAt    DateTime  @default(now())
+  
+  @@unique([studentId, curriculumId])
+}
+
+// Read Lecture model to track which lectures students have read
+model ReadLecture {
+  id            String    @id @default(cuid())
+  studentId     String
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lectureId     String
+  lecture       Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  readAt        DateTime  @default(now())
+  
+  @@unique([studentId, lectureId])
+}
+
+// Enums
+enum Role {
+  USER
+  TEACHER
+  STUDENT
+  ADMIN
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}
+
+enum HomeworkType {
+  MCQ
+  TEXT
+  FILE_UPLOAD
+}

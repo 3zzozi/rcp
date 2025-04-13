@@ -92,7 +92,7 @@ async function getLectureForStudent(lectureId: string, studentId: string, curric
 export default async function LectureView({
   params,
 }: {
-  params: { id: string; curriculumId: string };
+  params: { id: string; curriculumid: string };
 }) {
   // Check if user is a student
   const user = await requireStudent();
@@ -102,7 +102,7 @@ export default async function LectureView({
   }
 
   // Get lecture
-  const lecture = await getLectureForStudent(params.id, user.studentId, params.curriculumId);
+  const lecture = await getLectureForStudent(params.id, user.studentId, params.curriculumid);
 
   if (!lecture) {
     return notFound();
@@ -115,7 +115,7 @@ export default async function LectureView({
     <div>
       <div className="mb-6">
         <Link 
-          href={`/dashboard/student/curriculum/${params.curriculumId}`} 
+          href={`/dashboard/student/curriculum/${params.curriculumid}`} 
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />

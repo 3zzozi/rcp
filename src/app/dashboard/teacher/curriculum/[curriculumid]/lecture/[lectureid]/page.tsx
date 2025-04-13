@@ -5,8 +5,8 @@ import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 import prisma from '@/src/app/lib/db';
 import { requireTeacher } from '@/src/app/lib/auth';
 import { ChevronLeft, BookOpen, Users, Clock, Plus, Download, Trash2, Edit } from 'lucide-react';
-import { AddHomeworkButton } from '@/src/app/components/curriculum/AddHomeworkButton';
-import { AddAttachmentButton } from '@/src/app/components/curriculum/AddAttachmentButton';
+import  AddHomeworkButton  from '@/src/app/components/curriculum/AddHomeworkButton';
+import  AddAttachmentButton  from '@/src/app/components/curriculum/AddAttachmentButton';
 
 // Define types for TypeScript
 type Attachment = {
@@ -71,7 +71,7 @@ async function getLectureForTeacher(lectureId: string, teacherId: string) {
 export default async function TeacherLectureView({
   params,
 }: {
-  params: { lectureId: string; curriculumId: string };
+  params: { lectureid: string; curriculumid: string }; // Changed from lectureId, curriculumId to match folder structure
 }) {
   // Check if user is a teacher
   const user = await requireTeacher();
@@ -80,8 +80,8 @@ export default async function TeacherLectureView({
     return redirect('/dashboard/student');
   }
 
-  // Get lecture
-  const lecture = await getLectureForTeacher(params.lectureId, user.teacherId);
+  // Get lecture - using correct parameter names
+  const lecture = await getLectureForTeacher(params.lectureid, user.teacherId); // Changed from params.lectureId
 
   if (!lecture) {
     return notFound();
@@ -94,7 +94,7 @@ export default async function TeacherLectureView({
     <div>
       <div className="mb-6">
         <Link 
-          href={`/dashboard/teacher/curriculum/${params.curriculumId}`} 
+          href={`/dashboard/teacher/curriculum/${params.curriculumid}`} 
           className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />

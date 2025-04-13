@@ -93,19 +93,18 @@ model Note {
 
 // Homework model
 model Homework {
-  id            String    @id @default(cuid())
-  title         String
-  description   String?   @db.Text
-  dueDate       DateTime?
-  type          HomeworkType
-  lectureId     String
-  lecture       Lecture   @relation(fields: [lectureId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // Relations
-  mcqQuestions  MCQQuestion[]
-  submissions   HomeworkSubmission[]
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  type        String     // "FILE", "TEXT", "MCQ"
+  lectureId   String
+  lecture     Lecture    @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  submissions HomeworkSubmission[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([lectureId])
 }
 
 // MCQ Question model

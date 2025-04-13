@@ -8,6 +8,10 @@ import { CurriculumWithDetails, LectureWithDetails } from '@/types';
 import { ChevronLeft, BookOpen, Users, Clock, Plus, ClipboardList } from 'lucide-react';
 import { AddLectureButton } from '@/src/app/components/curriculum/AddLectureButton';
 import { AddNoteButton } from '@/src/app/components/curriculum/AddNoteButton';
+import AddHomeworkButton from '@/src/app/components/curriculum/AddHomeworkButton';
+import AddAttachmentButton from '@/src/app/components/curriculum/AddAttachmentButton';
+
+
 
 async function getCurriculum(curriculumId: string) {
   const curriculum = await prisma.curriculum.findUnique({
@@ -71,7 +75,7 @@ async function getCurriculum(curriculumId: string) {
 export default async function CurriculumDetail({
   params,
 }: {
-  params: { id: string };
+  params: { curriculumid: string }; // Changed from 'id' to 'curriculumid'
 }) {
   // Check if user is a teacher
   const user = await requireTeacher();
@@ -80,13 +84,12 @@ export default async function CurriculumDetail({
     return redirect('/dashboard/student');
   }
 
-  // Get curriculum
-  const curriculum = await getCurriculum(params.id);
+  // Get curriculum - using the correct parameter name
+  const curriculum = await getCurriculum(params.curriculumid); // Changed from params.id
 
   if (!curriculum) {
     return notFound();
   }
-
   // Check if the teacher owns this curriculum
   if (curriculum.teacherId !== user.teacherId) {
     return redirect('/dashboard/teacher');

@@ -1,8 +1,14 @@
-// src/app/components/curriculum/AddHomeworkButton.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
+// Define the correct enum values from your schema
+enum HomeworkType {
+  MCQ = "MCQ",
+  TEXT = "TEXT",
+  FILE_UPLOAD = "FILE_UPLOAD"
+}
 
 type AddHomeworkButtonProps = {
   lectureId: string;
@@ -22,13 +28,16 @@ export default function AddHomeworkButton({ lectureId }: AddHomeworkButtonProps)
     setIsSubmitting(true);
     setError("");
 
-    console.log("Sending homework data:", {
+    // Format the data for the API - using the correct enum value
+    const homeworkData = {
       title,
-      description,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      type: "FILE",
+      description: description || null,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      type: HomeworkType.FILE_UPLOAD, // Use the correct enum value
       lectureId,
-    });
+    };
+
+    console.log("Sending homework data:", homeworkData);
   
     try {
       const response = await fetch("/api/homework", {
@@ -36,19 +45,22 @@ export default function AddHomeworkButton({ lectureId }: AddHomeworkButtonProps)
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title,
-          description,
-          dueDate: dueDate ? new Date(dueDate) : null,
-          type: "FILE",
-          lectureId,
-        }),
+        body: JSON.stringify(homeworkData),
       });
   
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("Failed to parse response as JSON:", jsonError);
+        throw new Error("Server returned an invalid response");
+      }
       
       if (!response.ok) {
-        throw new Error(data.error || `Failed to create homework: ${response.status}`);
+        console.error("Server error response:", data);
+        throw new Error(
+          data.error || data.message || `Failed to create homework: ${response.status}`
+        );
       }
   
       // Reset form and close modal

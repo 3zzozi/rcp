@@ -230,12 +230,12 @@ export default async function TeacherLectureView({
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/dashboard/teacher/homework/${homework.id}`}
-                      className="flex items-center text-sm text-indigo-600 hover:text-indigo-900"
-                    >
-                      View Submissions
-                    </Link>
+                  <Link
+  href={`/dashboard/teacher/homework/${homework.id}/`}
+  className="flex items-center text-sm text-indigo-600 hover:text-indigo-900"
+>
+  View Submissions
+</Link>
                     <button
                       className="text-red-600 hover:text-red-900"
                       aria-label="Delete homework"

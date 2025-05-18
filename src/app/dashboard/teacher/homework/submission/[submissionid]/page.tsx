@@ -6,6 +6,7 @@ import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 import prisma from '@/src/app/lib/db';
 import { ChevronLeft, Download, User, Clock } from 'lucide-react';
 import GradeSubmissionForm from '@/src/app/components/curriculum/GradeSubmissionForm';
+import PDFViewer from '@/src/app/components/PDFViewer';
 
 // Helper function to format date
 function formatDate(date: Date | null | undefined) {
@@ -20,14 +21,19 @@ function formatDate(date: Date | null | undefined) {
 }
 
 async function getSubmissionDetails(submissionId: string, teacherId: string) {
-  // Log parameters for debugging
-  console.log('Getting submission with ID:', submissionId);
-  console.log('Teacher ID:', teacherId);
-
-  if (!submissionId) {
-    console.error('submissionId is undefined');
+  // Validate parameters
+  if (!submissionId || !submissionId.trim()) {
+    console.error('submissionId is undefined or empty');
     return null;
   }
+
+  if (!teacherId) {
+    console.error('teacherId is undefined');
+    return null;
+  }
+
+  console.log('Getting submission with ID:', submissionId);
+  console.log('Teacher ID:', teacherId);
 
   try {
     const submission = await prisma.homeworkSubmission.findUnique({
@@ -82,9 +88,15 @@ async function getSubmissionDetails(submissionId: string, teacherId: string) {
 export default async function SubmissionGradingPage({
   params,
 }: {
-  params: { submissionid: string }; // Make sure this matches your folder name
+  params: { submissionid: string };
 }) {
   console.log('Submission page params:', params);
+  
+  // Validate that submissionid exists in params
+  if (!params || !params.submissionid) {
+    console.error('Missing submission ID in URL parameters');
+    return notFound();
+  }
 
   // Check authentication
   const session = await getServerSession(authOptions);
@@ -116,6 +128,7 @@ export default async function SubmissionGradingPage({
   
   const homework = submission.homework;
   const safeFileUrl = submission.fileUrl || ''; // Ensure fileUrl is never undefined
+  const isPDF = safeFileUrl.toLowerCase().endsWith('.pdf');
   
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6">
@@ -205,24 +218,10 @@ export default async function SubmissionGradingPage({
                   </div>
                 </div>
                 
-                {safeFileUrl.toLowerCase().endsWith('.pdf') && (
+                {isPDF && (
                   <div className="mt-6 relative">
-                    {/* Add a fallback message if iframe doesn't load */}
-                    <div className="w-full h-96 border border-gray-200 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-500">PDF preview not available. Please download the file to view.</p>
-                    </div>
-                    {/* Only render iframe if we have a valid URL */}
-                    {safeFileUrl.startsWith('http') || safeFileUrl.startsWith('/') ? (
-                      <iframe
-                        src={safeFileUrl}
-                        className="w-full h-96 border border-gray-200 rounded-lg absolute top-0 left-0"
-                        title="Submission PDF"
-                        onError={(e) => {
-                          // Hide the iframe on error
-                          (e.target as HTMLIFrameElement).style.display = 'none';
-                        }}
-                      ></iframe>
-                    ) : null}
+                    {/* Use a client component for PDF viewer */}
+                    <PDFViewer fileUrl={safeFileUrl} />
                   </div>
                 )}
               </div>
@@ -242,11 +241,15 @@ export default async function SubmissionGradingPage({
         <div className="lg:col-span-1">
           <div className="bg-white shadow rounded-lg p-6 sticky top-6">
             <h2 className="text-xl font-semibold mb-4">Grade Submission</h2>
-            <GradeSubmissionForm 
-              submissionId={submission.id} 
-              currentGrade={submission.grade} 
-              homeworkId={homework.id}
-            />
+            {submission && submission.id ? (
+              <GradeSubmissionForm 
+                submissionId={submission.id} 
+                currentGrade={submission.grade || null} 
+                homeworkId={homework.id}
+              />
+            ) : (
+              <p className="text-gray-500">Cannot load grading form. Submission ID is missing.</p>
+            )}
           </div>
         </div>
       </div>

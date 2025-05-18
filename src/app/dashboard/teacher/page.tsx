@@ -1,4 +1,3 @@
-
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth/next';
@@ -6,7 +5,8 @@ import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 import prisma from '@/src/app/lib/db';
 import { requireTeacher } from '@/src/app/lib/auth';
 import { CurriculumWithDetails } from '@/types';
-import { Plus, BookOpen, Users } from 'lucide-react';
+import { Plus, BookOpen, Users, Edit } from 'lucide-react';
+import DeleteCurriculumButton from '@/src/app/components/curriculum/DeleteCurriculumButton';
 
 async function getTeacherCurriculums(teacherId: string) {
   const curriculums = await prisma.curriculum.findMany({
@@ -103,8 +103,8 @@ export default async function TeacherDashboard() {
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Last Updated
                   </th>
-                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                    <span className="sr-only">Actions</span>
+                  <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -127,12 +127,21 @@ export default async function TeacherDashboard() {
                       {new Date(curriculum.updatedAt).toLocaleDateString()}
                     </td>
                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                      <Link
-                        href={`/dashboard/teacher/curriculum/${curriculum.id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        View
-                      </Link>
+                      <div className="flex justify-end space-x-4">
+                        <Link
+                          href={`/dashboard/teacher/curriculum/${curriculum.id}`}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          View
+                        </Link>
+                        <Link
+                          href={`/dashboard/teacher/curriculum/${curriculum.id}/edit`}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Edit
+                        </Link>
+                        <DeleteCurriculumButton curriculumId={curriculum.id} />
+                      </div>
                     </td>
                   </tr>
                 ))}

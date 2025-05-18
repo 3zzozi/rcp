@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 import prisma from '@/src/app/lib/db';
-import { ChevronLeft, Download, FileText, User, Clock, Check, X } from 'lucide-react';
+import { ChevronLeft, Download, FileText, User, Clock, Edit } from 'lucide-react';
+import DeleteButtonWrapper from '@/src/app/components/curriculum/DeleteButtonWrapper';
 
 // Helper function to format date
 function formatDate(date: Date | null | undefined) {
@@ -118,6 +119,9 @@ export default async function HomeworkSubmissionsPage({
     return notFound();
   }
   
+  const curriculumId = homework.lecture.curriculum.id;
+  const lectureId = homework.lecture.id;
+  
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6">
       <div className="mb-6">
@@ -131,23 +135,45 @@ export default async function HomeworkSubmissionsPage({
       </div>
       
       <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {homework.title} - Submissions
-        </h1>
-        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-          <p>
-            From curriculum: {homework.lecture.curriculum.title}
-          </p>
-          <p>
-            Lecture: {homework.lecture.title}
-          </p>
-          {homework.dueDate && (
-            <p className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              Due: {formatDate(homework.dueDate)}
-            </p>
-          )}
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {homework.title} - Submissions
+            </h1>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+              <p>
+                From curriculum: {homework.lecture.curriculum.title}
+              </p>
+              <p>
+                Lecture: {homework.lecture.title}
+              </p>
+              {homework.dueDate && (
+                <p className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  Due: {formatDate(homework.dueDate)}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex items-center space-x-4">
+            <Link
+              href={`/dashboard/teacher/homework/${params.homeworkid}/edit`}
+              className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Link>
+            
+            <DeleteButtonWrapper 
+              homeworkId={params.homeworkid}
+              curriculumId={curriculumId}
+              lectureId={lectureId}
+            />
+          </div>
         </div>
+        
         {homework.description && (
           <div className="mt-4 p-4 bg-gray-50 rounded-md">
             <h3 className="font-medium mb-2">Description:</h3>
